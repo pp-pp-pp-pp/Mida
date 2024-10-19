@@ -365,19 +365,7 @@ Vocals; *Goodbye~3-*
 Others; *Bus*
 ```
 
-### Parallel Compression
 
-It would be done like this
-Audicle: *Drums~Comp*
-Comp; *Ratio:8x~Thresh:-10db~Atk:0.5ms~Rel:50ms~Mix:50%* // Heavy parallel compression settings
-*BD1---BD1---BD1---BD1---* // Four quarter notes
-
-This is probably how i would do it. this is like using it like an "insert" but your example is more like a actual parallel compression so ill show how i would do that too
-Audicle: *Program; Matrix*
-Matrix; *BD1---BD1---BD1---BD1---*
-Comp; *Ratio:8x~Thresh:-10db~Atk:0.5ms~Rel:50ms~Mix:50%* // Heavy parallel compression settings
-Matrix; *BD1---BD1---BD1---BD1---*
-This is kind of a cheeky way to do it with matricies, matrix is probably overkill for this
 
 
 
