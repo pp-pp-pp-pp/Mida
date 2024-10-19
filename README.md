@@ -1,4 +1,3 @@
-```markdown
 # Mida: A Flexible Music Notation Language
 
 Welcome to **Mida**, an innovative and flexible plain text music notation language designed for deep learning use cases and seamless integration with generative AI. Mida simplifies music creation, transcription, and manipulation with its intuitive syntax and powerful features.
@@ -13,6 +12,7 @@ Welcome to **Mida**, an innovative and flexible plain text music notation langua
   - [Percussion](#percussion)
   - [Multitracks](#multitracks)
   - [Advanced Features](#advanced-features)
+  - [Automation](#automation)
 - [Hierarchy](#hierarchy)
   - [Programs](#programs)
   - [Matrixes](#matrixes)
@@ -128,6 +128,54 @@ Others; *E3~A3~31-*
 
 ### Advanced Features
 
+#### Recording, Trimming, and Editing Clips
+
+Mida allows users to record, trim, and edit clips directly through text commands, offering a fully featured recording experience similar to a traditional DAW. Each recording is treated as an environmental variable that can be interacted with in real time.
+
+**Example of Recording and Braiding:**
+```mida
+Audicle: *Block*~*Braid*
+Permissions; *Record*
+Arm; *#123456* // Example channel address to arm, also arming a braid to print a debug statement
+*C4*
+*Braid*
+
+// Output:
+// mida stream:
+// C4
+// C4
+```
+- **Explanation**: In this example, the braid is recording itself and anything that passes through it. The braid is essentially copying the musical data captured during the recording process.
+- If the recording step is omitted, the braid behaves differently:
+  ```mida
+  Audicle: *C4*~*Braid*
+  *Braid*
+
+  // Output:
+  // mida stream:
+  // C4~Braid
+  // C4 // (Braided)
+  ```
+  Without explicit recording, the braid still copies the note but does not capture it in the same way as during the recording process.
+- **Environmental Recording**: Recording is treated as an environmental state—once armed, any data that passes through is captured, providing flexibility similar to a looping station or overdub setup in a DAW.
+
+This unique approach allows for a conceptual separation between capturing the "potential" for audio and ensuring the actual recorded data is interactable and can be played or manipulated further.
+
+#### Effect Chains and Routing
+
+Mida allows users to create and chain multiple effects, similar to plugin chains in traditional DAWs. You can apply EQ, compression, reverb, and more to any track, giving full flexibility in sound shaping.
+
+**Example of Using EQ and Compression Together:**
+```mida
+Audicle: *EQ~Comp*
+*C#3- - -*
+EQ; *Default* // *Bands:{Low,Mid,High} Low; Type: Lowpass; Q: 0.5; Hz: 100; Bypassed: False; Gain: 1db; Mid; Type: Bandpass; Q: 0.5; Hz: 1000; Bypassed: False; Gain: 1db; High; Type: Highpass; Q: 0.5; Hz: 10,000, Bypassed: False; Gain: 1db*
+Comp; *Default* // *Ratio:4x~Thresh:Unity~Atk:0.10ms~Rel:0.10*
+*C#3- - -*
+```
+- **Explanation**: This example plays a note (`C#3`), sets up an EQ and compressor, and then plays the note again. The second time the note is played, it has the effects applied. The EQ is configured with multiple bands (Low, Mid, High), and the compression is set with default parameters.
+- **Automatable**: Each parameter of the EQ or compressor can be automated, making it possible to shape the sound dynamically over time.
+
 #### Braids, Trusses, and Ribbons
 
 - **Braids**: Copy and modify sections, allowing unrelated parts to play in the same sequence.
@@ -138,12 +186,15 @@ Others; *E3~A3~31-*
 
 - **Trusses**: Multi-channel systems with predefined channels (N, n, Z, z) for parallel playback.
   ```mida
-  Audicle~Truss~: 
+  Audicle~Truss: 
   N: *Hello*
   n: *Hello~Again!*
   Z: *C4*
   z: *E4*
-  Audicle: *Truss*
+  Audicle: *Truss~Z:*
+  Audicle: *Truss~n:~N:*
+  // The audicle truss is already a 4 channel group type object, but we can call parts of the truss to play individually as well in the following programs. Remember each audicle is a program even if it doesn't use the program keyword!
+  // Trusses are kind of like snakes or balens, providing a powerful way to control multiple parallel channels while retaining the flexibility to address each channel independently.
   ```
 
 - **Ribbons**: Highest-level structure, representing entire projects or sessions with multiple Programs.
@@ -159,7 +210,54 @@ Others; *E3~A3~31-*
   Program1; *Bass; Drums~DCA*
   Bass; *C1~16-*
   Drums; *CHH~0db~3-*
-  ```
+  ``
+
+#### Starried (Reverb Effect)
+
+**Starried** is a special keyword in Mida that allows you to add reverb effects to your notation. It provides an intuitive way to represent reverb settings and apply them to notes directly within the text.
+
+**Example of Starried Usage:**
+```mida
+Audicle~Starried: 
+*Pre:40ms~RT60:5s~mix%:100*
+*C4~7-A4~7-*
+```
+
+- **Pre**: Pre-delay time in milliseconds (`40ms` in this example).
+- **RT60**: Reverb time, indicating how long it takes for reverb to decay by 60 dB (`5s` in this example).
+- **mix%**: Mix percentage.
+
+The `Starried` keyword adds an expressive layer to Mida, giving users the ability to incorporate reverb information in a clear and straightforward manner. Unlike traditional MIDI CC, which cannot easily represent complex effects, Mida's flexibility allows for detailed and human-readable control over these effects.
+
+### Automation
+
+Mida supports advanced automation that allows for dynamic control of various musical parameters over time. The ability to automate effects like gain or reverb provides Mida users with expressive tools akin to those found in modern DAWs.
+
+**Example of Automation Usage:**
+```mida
+Audicle: *Program*
+Program; *Bass~DCA~Starried~Bus~Label*
+Label; *Hello~*
+Starried; *Default*
+DCA; *Unity*
+*C1~3-* 
+// In this example, the program would print 'Hello' to the label channel if no output is explicitly given, but here we add a C1 note. The reverb effect set by Starried gets automated below.
+
+Audicle: *Program*
+Program; *Bus~Label*
+Starried; *RT60:20s*
+Label; *5s*
+DCA; *-5db*
+*C1~3-* 
+// The DCA fader and Starried RT60 time are being automated here. The 'Label' determines the transition time for these changes.
+
+Audicle~Starried; *Default~Label*
+Starried; *- - - - - - RT60; 3s*
+Label; *5s*
+*C2~15-*
+// In this example, the Starried audicle starts with default parameters and has a label attached. The RT60 parameter is changed after 6 sixteenth notes, with a transition time handled by 'Label', which is set to 5 seconds.
+```
+- **Detailed Control**: Automation in Mida is highly customizable. You can specify when an effect parameter should change, how long the transition should take, and attach labels to provide a clear and human-readable sequence for these changes.
 
 ## Hierarchy
 
@@ -223,94 +321,4 @@ Mida allows real-time AI-driven transformations, enabling dynamic and evolving c
 ```mida
 Audicle~Sunbird: *Remix the master output live*
 Sunbird; *Apply live remix effects on output in real time*
-```
-
-## Getting Started
-
-1. **Install Mida**: Follow the installation instructions [here](#).
-2. **Basic Syntax**: Learn the basic notation with examples.
-3. **Create Your First Program**: Start by writing a simple Program with Drums, Bass, and Vocals.
-4. **Explore Advanced Features**: Dive into Matrixes, Busses, and AI integrations like Tree, Seaside, and Sunbird.
-
-## Examples
-
-### Simple Melody
-
-```mida
-Audicle: *A---B---C---D---E---F...G...*
-```
-
-### Chords and Guitar Tunings
-
-```mida
-Audicle~G;-2.0.0.0.0.0: 
-*G;520000~16v*
-
-Audicle~G;-2.110hz.0.0.0.0: 
-*G;520000~16v*
-```
-
-### Multitrack Setup
-
-```mida
-Audicle: *Program; Drums, Bass, Vocals, Others*
-Drums; *CHH~7-CHH~7-CHH~7-CHH~7-*
-Bass; *C1~31.*
-Vocals; *Hello~C4~31.*
-Others; *E3~G3~31-*
-```
-
-### Using Busses and Braids
-
-```mida
-Audicle: *Program; Drums~Bus, Bass~Bus, Vocals~Bus, Others~*
-Drums; *CHH~7-CHH~7-CHH~7-CHH~7-*
-Bass; *C1~31.*
-Vocals; *Hello~C4~31.*
-Others; *E3~G3~31-*
-
-Audicle: *Program; Drums, Bass, Vocals, Others*
-Drums; *Bus*
-Bass; *Bus*
-Vocals; *Goodbye~3-*
-Others; *Bus*
-```
-
-## Best Practices
-
-- **Consistent Naming**: Use consistent abbreviations and naming conventions for tracks and instruments.
-- **Modular Design**: Utilize groups and busses to organize and manage complex mixes.
-- **Leverage AI Features**: Experiment with Tree, Seaside, and Sunbird for generative and dynamic compositions.
-- **Documentation**: Keep detailed notes on your Mida files for easier collaboration and debugging.
-
-## Glossary
-
-- **Audicle**: The main container for Mida streams, signifying the start of a Mida command.
-- **Program**: A sequence of tracks that play one after another.
-- **Matrix**: The mastering stage for sub-mixes before sending to the Program feed.
-- **Bus**: Handles routing and automation of audio signals.
-- **Group**: Organizes multiple tracks without affecting audio directly.
-- **DCA**: Controls gain across multiple tracks with a fader.
-- **Braid**: Copies and modifies audio data for reuse.
-- **Truss**: Manages a four-channel system for parallel playback.
-- **Ribbon**: Represents an entire project or session containing multiple Programs.
-- **Tree, Seaside, Sunbird**: Advanced features for AI integration, focusing on generating, simplifying, and remixing music respectively.
-
-## Contributing
-
-We welcome contributions to Mida! Please follow these steps to contribute:
-
-1. Fork the repository.
-2. Create a new branch for your feature or bugfix.
-3. Commit your changes with clear messages.
-4. Submit a pull request with a detailed description of your changes.
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
-
----
-
-For more detailed information and advanced usage, please refer to the [Mida Documentation](docs/README.md).
-
 ```
