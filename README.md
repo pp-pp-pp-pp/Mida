@@ -13,6 +13,7 @@ Welcome to **Mida**, an innovative and flexible plain text music notation langua
   - [Multitracks](#multitracks)
   - [Advanced Features](#advanced-features)
   - [Automation](#automation)
+  - [Molly and Trimming Clips](#molly-and-trimming-clips)
 - [Hierarchy](#hierarchy)
   - [Programs](#programs)
   - [Matrixes](#matrixes)
@@ -176,88 +177,47 @@ Comp; *Default* // *Ratio:4x~Thresh:Unity~Atk:0.10ms~Rel:0.10*
 - **Explanation**: This example plays a note (`C#3`), sets up an EQ and compressor, and then plays the note again. The second time the note is played, it has the effects applied. The EQ is configured with multiple bands (Low, Mid, High), and the compression is set with default parameters.
 - **Automatable**: Each parameter of the EQ or compressor can be automated, making it possible to shape the sound dynamically over time.
 
-#### Braids, Trusses, and Ribbons
+### Molly and Trimming Clips
 
-- **Braids**: Copy and modify sections, allowing unrelated parts to play in the same sequence.
-  ```mida
-  Audicle~Braid: *Hello!~3-*
-  Braid; *Braid*~*Hello again!*
-  ```
+**Molly** is a versatile helper in Mida used to facilitate non-audio actions like trimming files or acting as an agent at the Audicle level. Molly can automate otherwise cumbersome operations, such as automatically restoring a state or handling specific non-musical tasks.
 
-- **Trusses**: Multi-channel systems with predefined channels (N, n, Z, z) for parallel playback.
-  ```mida
-  Audicle~Truss: 
-  N: *Hello*
-  n: *Hello~Again!*
-  Z: *C4*
-  z: *E4*
-  Audicle: *Truss~Z:*
-  Audicle: *Truss~n:~N:*
-  // The audicle truss is already a 4 channel group type object, but we can call parts of the truss to play individually as well in the following programs. Remember each audicle is a program even if it doesn't use the program keyword!
-  // Trusses are kind of like snakes or balens, providing a powerful way to control multiple parallel channels while retaining the flexibility to address each channel independently.
-  ```
-
-- **Ribbons**: Highest-level structure, representing entire projects or sessions with multiple Programs.
-  ```mida
-  Audicle~Ribbon: *myRibbon!*
-  Ribbon; *Program1; Program2*
-  Program1; *Bass; Drums~DCA*
-  Bass; *C1~16-*
-  Drums; *CHH~0db~3-*
-  Program2; **
-  
-  Audicle~Ribbon: *anotherRibbon!*
-  Program1; *Bass; Drums~DCA*
-  Bass; *C1~16-*
-  Drums; *CHH~0db~3-*
-  ``
-
-#### Starried (Reverb Effect)
-
-**Starried** is a special keyword in Mida that allows you to add reverb effects to your notation. It provides an intuitive way to represent reverb settings and apply them to notes directly within the text.
-
-**Example of Starried Usage:**
+**Example of Trimming with Molly**:
 ```mida
-Audicle~Starried: 
-*Pre:40ms~RT60:5s~mix%:100*
-*C4~7-A4~7-*
+Audicle *Molly*
+Molly; *Trim*~r*Ribbon!!##1#123456@abcdef*
+*Trim; Start:1s; End:6s*
+Molly; *Restore*
 ```
+In this example, Molly is used to manage trimming on a specific audio file, identified by its ribbon, channel, and file address. Molly helps manage actions like trimming without affecting the actual sound, simplifying the process.
 
-- **Pre**: Pre-delay time in milliseconds (`40ms` in this example).
-- **RT60**: Reverb time, indicating how long it takes for reverb to decay by 60 dB (`5s` in this example).
-- **mix%**: Mix percentage.
-
-The `Starried` keyword adds an expressive layer to Mida, giving users the ability to incorporate reverb information in a clear and straightforward manner. Unlike traditional MIDI CC, which cannot easily represent complex effects, Mida's flexibility allows for detailed and human-readable control over these effects.
-
-### Automation
-
-Mida supports advanced automation that allows for dynamic control of various musical parameters over time. The ability to automate effects like gain or reverb provides Mida users with expressive tools akin to those found in modern DAWs.
-
-**Example of Automation Usage:**
+If you need to trim without using Molly, you can still achieve it manually:
 ```mida
-Audicle: *Program*
-Program; *Bass~DCA~Starried~Bus~Label*
-Label; *Hello~*
-Starried; *Default*
-DCA; *Unity*
-*C1~3-* 
-// In this example, the program would print 'Hello' to the label channel if no output is explicitly given, but here we add a C1 note. The reverb effect set by Starried gets automated below.
-
-Audicle: *Program*
-Program; *Bus~Label*
-Starried; *RT60:20s*
-Label; *5s*
-DCA; *-5db*
-*C1~3-* 
-// The DCA fader and Starried RT60 time are being automated here. The 'Label' determines the transition time for these changes.
-
-Audicle~Starried; *Default~Label*
-Starried; *- - - - - - RT60; 3s*
-Label; *5s*
-*C2~15-*
-// In this example, the Starried audicle starts with default parameters and has a label attached. The RT60 parameter is changed after 6 sixteenth notes, with a transition time handled by 'Label', which is set to 5 seconds.
+Audicle *Trim*~r*Ribbon!!##1#123456@abcdef*
+*Trim; Start:1s; End:6s*
+Label; *Undo*
 ```
-- **Detailed Control**: Automation in Mida is highly customizable. You can specify when an effect parameter should change, how long the transition should take, and attach labels to provide a clear and human-readable sequence for these changes.
+Molly's usefulness is more apparent when more advanced automation is involved.
+
+**Automating Trimming**:
+```mida
+Audicle *Molly~Label*
+Molly; *Trim*~r*Ribbon!!##1#123456@abcdef*
+*Trim; Start:1s; End:6s*
+*Hello~World!*
+Molly; *Restore*
+```
+- **Explanation**: In this example, Molly automates the trimming process, trims an audio file, and then restores it after playback. The `Label` helps manage the trim duration, and `Restore` brings the Audicle back to its initial state.
+
+Another manual example:
+```mida
+Audicle *Trim~Label*~r*Ribbon!!##1#123456@abcdef*
+*Trim; Start:1s; End:6s*
+*Hello~World!*
+Label; *Undo-Undo*
+```
+- **Explanation**: This manually trims the file and, through `Undo`, reverts the clip to its original state after playback.
+
+This is particularly useful for trimming actions that need to be reversible, just like a DAW's non-destructive editing capabilities.
 
 ## Hierarchy
 
@@ -322,3 +282,92 @@ Mida allows real-time AI-driven transformations, enabling dynamic and evolving c
 Audicle~Sunbird: *Remix the master output live*
 Sunbird; *Apply live remix effects on output in real time*
 ```
+
+## Getting Started
+
+1. **Install Mida**: Follow the installation instructions [here](#).
+2. **Basic Syntax**: Learn the basic notation with examples.
+3. **Create Your First Program**: Start by writing a simple Program with Drums, Bass, and Vocals.
+4. **Explore Advanced Features**: Dive into Matrixes, Busses, and AI integrations like Tree, Seaside, and Sunbird.
+
+## Examples
+
+### Simple Melody
+
+```mida
+Audicle: *A---B---C---D---E---F...G...*
+```
+
+### Chords and Guitar Tunings
+
+```mida
+Audicle~G;-2.0.0.0.0.0: 
+*G;520000~16v*
+
+Audicle~G;-2.110hz.0.0.0.0: 
+*G;520000~16v*
+```
+
+### Multitrack Setup
+
+```mida
+Audicle: *Program; Drums, Bass, Vocals, Others*
+Drums; *CHH~7-CHH~7-CHH~7-CHH~7-*
+Bass; *C1~31.*
+Vocals; *Hello~C4~31.*
+Others; *E3~G3~31-*
+```
+
+### Using Busses and Braids
+
+```mida
+Audicle: *Program; Drums~Bus, Bass~Bus, Vocals~Bus, Others~*
+Drums; *CHH~7-CHH~7-CHH~7-CHH~7-*
+Bass; *C1~31.*
+Vocals; *Hello~C4~31.*
+Others; *E3~G3~31-*
+
+Audicle: *Program; Drums, Bass, Vocals, Others*
+Drums; *Bus*
+Bass; *Bus*
+Vocals; *Goodbye~3-*
+Others; *Bus*
+```
+
+## Best Practices
+
+- **Consistent Naming**: Use consistent abbreviations and naming conventions for tracks and instruments.
+- **Modular Design**: Utilize groups and busses to organize and manage complex mixes.
+- **Leverage AI Features**: Experiment with Tree, Seaside, and Sunbird for generative and dynamic compositions.
+- **Documentation**: Keep detailed notes on your Mida files for easier collaboration and debugging.
+
+## Glossary
+
+- **Audicle**: The main container for Mida streams, signifying the start of a Mida command.
+- **Program**: A sequence of tracks that play one after another.
+- **Matrix**: The mastering stage for sub-mixes before sending to the Program feed.
+- **Bus**: Handles routing and automation of audio signals.
+- **Group**: Organizes multiple tracks without affecting audio directly.
+- **DCA**: Controls gain across multiple tracks with a fader.
+- **Braid**: Copies and modifies audio data for reuse.
+- **Truss**: Manages a four-channel system for parallel playback.
+- **Ribbon**: Represents an entire project or session containing multiple Programs.
+- **Tree, Seaside, Sunbird**: Advanced features for AI integration, focusing on generating, simplifying, and remixing music respectively.
+- **Molly**: Helper function for non-audio tasks like trimming and state management.
+
+## Contributing
+
+We welcome contributions to Mida! Please follow these steps to contribute:
+
+1. Fork the repository.
+2. Create a new branch for your feature or bugfix.
+3. Commit your changes with clear messages.
+4. Submit a pull request with a detailed description of your changes.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+For more detailed information and advanced usage, please refer to the [Mida Documentation](docs/README.md).
