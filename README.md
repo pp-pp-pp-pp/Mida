@@ -30,6 +30,7 @@ Welcome to **Mida**, an innovative and flexible plain text music notation langua
   - [Chords and Guitar Tunings](#chords-and-guitar-tunings)
   - [Multitrack Setup](#multitrack-setup)
   - [Using Busses and Braids](#using-busses-and-braids)
+  - [Parallel Compression](#parallel-compression)
 - [Best Practices](#best-practices)
 - [Glossary](#glossary)
 - [Contributing](#contributing)
@@ -198,26 +199,56 @@ Label; *Undo*
 ```
 Molly's usefulness is more apparent when more advanced automation is involved.
 
-**Automating Trimming**:
-```mida
-Audicle *Molly~Label*
-Molly; *Trim*~r*Ribbon!!##1#123456@abcdef*
-*Trim; Start:1s; End:6s*
-*Hello~World!*
-Molly; *Restore*
-```
-- **Explanation**: In this example, Molly automates the trimming process, trims an audio file, and then restores it after playback. The `Label` helps manage the trim duration, and `Restore` brings the Audicle back to its initial state.
+### Automation
 
-Another manual example:
-```mida
-Audicle *Trim~Label*~r*Ribbon!!##1#123456@abcdef*
-*Trim; Start:1s; End:6s*
-*Hello~World!*
-Label; *Undo-Undo*
-```
-- **Explanation**: This manually trims the file and, through `Undo`, reverts the clip to its original state after playback.
+Mida supports advanced automation that allows for dynamic control of various musical parameters over time. The ability to automate effects like gain or reverb provides Mida users with expressive tools akin to those found in modern DAWs.
 
-This is particularly useful for trimming actions that need to be reversible, just like a DAW's non-destructive editing capabilities.
+**Example of Automation Usage:**
+```mida
+Audicle: *Program*
+Program; *Bass~DCA~Starried~Bus~Label*
+Label; *Hello~*
+Starried; *Default*
+DCA; *Unity*
+*C1~3-* 
+// In this example, the program would print 'Hello' to the label channel if no output is explicitly given, but here we add a C1 note. The reverb effect set by Starried gets automated below.
+
+Audicle: *Program*
+Program; *Bus~Label*
+Starried; *RT60:20s*
+Label; *5s*
+DCA; *-5db*
+*C1~3-* 
+// The DCA fader and Starried RT60 time are being automated here. The 'Label' determines the transition time for these changes.
+
+Audicle~Starried; *Default~Label*
+Starried; *- - - - - - RT60; 3s*
+Label; *5s*
+*C2~15-*
+// In this example, the Starried audicle starts with default parameters and has a label attached. The RT60 parameter is changed after 6 sixteenth notes, with a transition time handled by 'Label', which is set to 5 seconds.
+```
+- **Detailed Control**: Automation in Mida is highly customizable. You can specify when an effect parameter should change, how long the transition should take, and attach labels to provide a clear and human-readable sequence for these changes.
+
+## Parallel Compression
+
+Mida also allows for parallel compression, a popular mixing technique where a heavily compressed version of a track is mixed with the original signal for added punch and sustain.
+
+**Example of Parallel Compression:**
+```mida
+Audicle: *Drums~Comp*
+Comp; *Ratio:8x~Thresh:-10db~Atk:0.5ms~Rel:50ms~Mix:50%* // Heavy parallel compression settings
+*BD1---BD1---BD1---BD1---* // Four quarter notes
+```
+This example shows how to apply heavy compression settings to drums and mix them with the original signal (using `Mix:50%`), creating a parallel compression effect that adds power without sacrificing dynamics.
+
+For a more traditional parallel compression setup using matrix channels:
+```mida
+Audicle: *Program; Matrix*
+Matrix; *BD1---BD1---BD1---BD1---*
+Comp; *Ratio:8x~Thresh:-10db~Atk:0.5ms~Rel:50ms~Mix:50%* // Heavy parallel compression settings
+Matrix; *BD1---BD1---BD1---BD1---*
+```
+Here, the matrix allows both the dry and compressed versions of the track to be heard simultaneously, creating a true parallel compression effect.
 
 ## Hierarchy
 
@@ -334,40 +365,19 @@ Vocals; *Goodbye~3-*
 Others; *Bus*
 ```
 
-## Best Practices
+### Parallel Compression
 
-- **Consistent Naming**: Use consistent abbreviations and naming conventions for tracks and instruments.
-- **Modular Design**: Utilize groups and busses to organize and manage complex mixes.
-- **Leverage AI Features**: Experiment with Tree, Seaside, and Sunbird for generative and dynamic compositions.
-- **Documentation**: Keep detailed notes on your Mida files for easier collaboration and debugging.
+It would be done like this
+Audicle: *Drums~Comp*
+Comp; *Ratio:8x~Thresh:-10db~Atk:0.5ms~Rel:50ms~Mix:50%* // Heavy parallel compression settings
+*BD1---BD1---BD1---BD1---* // Four quarter notes
 
-## Glossary
+This is probably how i would do it. this is like using it like an "insert" but your example is more like a actual parallel compression so ill show how i would do that too
+Audicle: *Program; Matrix*
+Matrix; *BD1---BD1---BD1---BD1---*
+Comp; *Ratio:8x~Thresh:-10db~Atk:0.5ms~Rel:50ms~Mix:50%* // Heavy parallel compression settings
+Matrix; *BD1---BD1---BD1---BD1---*
+This is kind of a cheeky way to do it with matricies, matrix is probably overkill for this
 
-- **Audicle**: The main container for Mida streams, signifying the start of a Mida command.
-- **Program**: A sequence of tracks that play one after another.
-- **Matrix**: The mastering stage for sub-mixes before sending to the Program feed.
-- **Bus**: Handles routing and automation of audio signals.
-- **Group**: Organizes multiple tracks without affecting audio directly.
-- **DCA**: Controls gain across multiple tracks with a fader.
-- **Braid**: Copies and modifies audio data for reuse.
-- **Truss**: Manages a four-channel system for parallel playback.
-- **Ribbon**: Represents an entire project or session containing multiple Programs.
-- **Tree, Seaside, Sunbird**: Advanced features for AI integration, focusing on generating, simplifying, and remixing music respectively.
-- **Molly**: Helper function for non-audio tasks like trimming and state management.
 
-## Contributing
 
-We welcome contributions to Mida! Please follow these steps to contribute:
-
-1. Fork the repository.
-2. Create a new branch for your feature or bugfix.
-3. Commit your changes with clear messages.
-4. Submit a pull request with a detailed description of your changes.
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
-
----
-
-For more detailed information and advanced usage, please refer to the [Mida Documentation](docs/README.md).
